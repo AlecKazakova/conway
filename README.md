@@ -7,13 +7,7 @@ Print statistics on module contribution.
 In any git repository, pass the folder you're interested in contributor statistics on:
 
 ```
-$ conway app
-```
-
-You can specify the time range you care about
-
-```
-$ conway --since="Last Month"
+$ conway --since="last year" -D app
 ```
 
 ## Download
