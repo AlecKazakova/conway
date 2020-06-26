@@ -6,6 +6,7 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.split
 import java.io.InputStream
+import java.io.InputStreamReader
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -22,7 +23,7 @@ internal class ConwayCli: CliktCommand(name = "conway") {
   private val allCommits = mutableMapOf<String, Int>()
 
   private fun InputStream.forCommits(body: (email: String, changed: Int, file: String) -> Unit) {
-    reader().useLines { sequence ->
+    InputStreamReader(this).useLines { sequence ->
       val iterator = sequence.iterator()
       iterator.next() // Skip initial newline
 
