@@ -120,7 +120,7 @@ internal class ConwayCli : CliktCommand(name = "conway") {
 
     Runtime.getRuntime().exec(args.toTypedArray()).inputStream.forCommits { _, changed, file ->
       val folder = folders.firstOrNull { file.startsWith(it) } ?: return@forCommits
-      val nextLevelDirectory = file.substringAfter(folder).trim('/').substringBefore('/')
+      val nextLevelDirectory = file.substringAfter(folder).trim('/', '{', '}').substringBefore('/')
 
       folderCommits[nextLevelDirectory] = folderCommits.getOrDefault(nextLevelDirectory, 0) + changed
     }
