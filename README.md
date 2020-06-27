@@ -7,7 +7,19 @@ Print statistics on module contribution.
 In any git repository, pass the folder you're interested in contributor statistics on:
 
 ```
-$ conway --since="last year" -D app
+$ conway --since="last year" --folders=app
+```
+
+Alternatively grab stats for a specific user:
+
+```
+$ conway --since="last year" --author="alec"
+```
+
+By default that returns results for directories at the root. To set the root somewhere else pass the folders you care about:
+
+```
+$ conway --author="alec" --folders=app
 ```
 
 ## Download
