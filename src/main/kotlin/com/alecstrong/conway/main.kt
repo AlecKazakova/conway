@@ -109,10 +109,11 @@ internal class ConwayCli : CliktCommand(name = "conway") {
 
   private fun contributionsByAuthor(author: String) {
     val folderCommits = mutableMapOf<String, LineChanges>()
+    val allCommits = mutableMapOf<String, LineChanges>()
 
     val folders = folder ?: listOf("") //default to root
 
-    val args = mutableListOf("git", "log", "--numstat", "--author", author)
+    val args = mutableListOf("git", "log", "--numstat")
     if (since != null) {
       args.add("--since=\"$since\"")
     }
@@ -121,12 +122,17 @@ internal class ConwayCli : CliktCommand(name = "conway") {
 
     echo("Finding folders with 1% or greater contributions for $author")
 
-    Runtime.getRuntime().exec(args.toTypedArray()).inputStream.forCommits { _, changed, file ->
+    Runtime.getRuntime().exec(args.toTypedArray()).inputStream.forCommits { email, changed, file ->
       val folder = folders.firstOrNull { file.startsWith(it) } ?: return@forCommits
       val nextLevelDirectory = file.substringAfter(folder).trim('/', '{', '}').substringBefore('/')
 
-      folderCommits[nextLevelDirectory] =
+      if (email.startsWith(author)) {
+        folderCommits[nextLevelDirectory] =
           folderCommits.getOrDefault(nextLevelDirectory, LineChanges()) + changed
+      }
+
+      allCommits[nextLevelDirectory] =
+        allCommits.getOrDefault(nextLevelDirectory, LineChanges()) + changed
     }
 
     val totalChanges = folderCommits.values.map { it.total() }.sum()
@@ -139,15 +145,22 @@ internal class ConwayCli : CliktCommand(name = "conway") {
               .divide(totalChanges.toBigDecimal(), 2, RoundingMode.HALF_UP)
 
           return@mapNotNull if (percentageInFolder >= BigDecimal.valueOf(1)) {
-            Triple(folder, percentageInFolder, changes)
+            val totalChangesInFolder = allCommits.getOrDefault(folder, LineChanges()).total()
+
+            val percentageOfFolder = changes.total()
+                .toBigDecimal()
+                .multiply(BigDecimal.valueOf(100))
+                .divide(totalChangesInFolder.toBigDecimal(), 2, RoundingMode.HALF_UP)
+
+            AuthorContribution(folder, percentageInFolder, percentageOfFolder, changes)
           } else {
             null
           }
         }
-        .sortedByDescending { it.second }
-        .forEach { (folder, percentage, lineChanges) ->
+        .sortedByDescending { it.percentageInFolder }
+        .forEach { contribution ->
           echo(
-              "$author writes ${percentage.toPlainString()}% of their code in $folder $lineChanges")
+              "$author writes ${contribution.percentageInFolder.toPlainString()}% of their code in ${contribution.folder} ${contribution.lineChanges}, accounting for ${contribution.percentageOfFolder.toPlainString()}% of ${contribution.folder}")
         }
   }
 
@@ -161,6 +174,13 @@ internal class ConwayCli : CliktCommand(name = "conway") {
 
   private data class Contribution(
     val author: String,
+    val percentageInFolder: BigDecimal,
+    val percentageOfFolder: BigDecimal,
+    val lineChanges: LineChanges
+  )
+
+  private data class AuthorContribution(
+    val folder: String,
     val percentageInFolder: BigDecimal,
     val percentageOfFolder: BigDecimal,
     val lineChanges: LineChanges
@@ -189,4 +209,3 @@ internal class ConwayCli : CliktCommand(name = "conway") {
     private val spaces = Regex("\\s+")
   }
 }
-
