@@ -126,7 +126,7 @@ internal class ConwayCli : CliktCommand(name = "conway") {
       val folder = folders.firstOrNull { file.startsWith(it) } ?: return@forCommits
       val nextLevelDirectory = file.substringAfter(folder).trim('/', '{', '}').substringBefore('/')
 
-      if (email == author) {
+      if (email.startsWith(author)) {
         folderCommits[nextLevelDirectory] =
           folderCommits.getOrDefault(nextLevelDirectory, LineChanges()) + changed
       }
@@ -209,4 +209,3 @@ internal class ConwayCli : CliktCommand(name = "conway") {
     private val spaces = Regex("\\s+")
   }
 }
-
